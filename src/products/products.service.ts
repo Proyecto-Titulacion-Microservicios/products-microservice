@@ -2,23 +2,34 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Prisma, PrismaClient } from '@prisma/client';
+import { PaginationDto } from 'src/common';
+
 
 @Injectable()
 export class ProductsService extends PrismaClient implements OnModuleInit {
-
-  private readonly logger = new Logger('ProductsService ');
-
-
+  private readonly logger= new Logger('ProductsService');
   onModuleInit() {
-    this.$connect()
-    this.logger.log('Database connected');
+    this.$connect();
+    this.logger.log('Database connect')
   }
   create(createProductDto: CreateProductDto) {
-    return 'This action adds a new product';
-  }
+    return this.product.create({
+      data: createProductDto
 
-  findAll() {
-    return this.product.findMany({});
+    });
+    
+  }
+  async findAll(paginationDto:PaginationDto) {
+    const { page, limit} = paginationDto;
+    const totalPage = await this.product.count();
+
+    return {
+      data: await this.product.findMany({
+        skip : ( page - 1) * limit,
+        take: limit
+      })  
+    }
+
   }
 
   findOne(id: number) {
